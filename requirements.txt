@@ -4,3 +4,4 @@ fastapi
 uvicorn
 pydantic
 requests
+itsdangerous==2.0.1
