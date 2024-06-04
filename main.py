@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-import base58, time, datetime
+import base64, time, datetime
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -196,8 +196,8 @@ async def setup(request: Request):
         cookie, session_id = form.get("cookie"), form.get("session_id")
         
         request.session["uuid"] = uid
-        request.session["cookie"] = base58.b58encode(cookie.encode()).decode()
-        request.session["session_id"] = base58.b58encode(session_id.encode()).decode()
+        request.session["cookie"] = base64.b64encode(cookie.encode()).decode()
+        request.session["session_id"] = base64.b64encode(session_id.encode()).decode()
         request.session["timestamp"] = time.time()
         request.session["date"] = datetime.datetime.fromtimestamp(request.session["timestamp"]).strftime("%d/%m/%Y %H:%M %p")
         return {"status": f"Credentials stored into cookie for author has {uid!r} UUID."}
