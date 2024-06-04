@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-import base58
+import base64
 import time
 import fastapi
 from http.cookies import SimpleCookie
@@ -72,7 +72,7 @@ def start_keep_alive(suno_cookie: SunoCookie):
 async def set_cookie(request: fastapi.Request):
     session = request.session
     suno_auth = SunoCookie()
-    suno_auth.set_session_id(base58.b58decode(session.get("session_id")).decode())
-    suno_auth.load_cookie(base58.b58decode(session.get("cookie")).decode())
+    suno_auth.set_session_id(base64.b64decode(session.get("session_id")).decode())
+    suno_auth.load_cookie(base64.b64decode(session.get("cookie")).decode())
     start_keep_alive(suno_auth)
     return suno_auth
