@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 
-import os
+import base58
 import time
+import fastapi
 from http.cookies import SimpleCookie
 from threading import Thread
 
@@ -35,11 +36,6 @@ class SunoCookie:
         self.token = token
 
 
-suno_auth = SunoCookie()
-suno_auth.set_session_id(os.getenv("SESSION_ID"))
-suno_auth.load_cookie(os.getenv("COOKIE"))
-
-
 def update_token(suno_cookie: SunoCookie):
     headers = {"cookie": suno_cookie.get_cookie()}
     headers.update(COMMON_HEADERS)
@@ -55,8 +51,6 @@ def update_token(suno_cookie: SunoCookie):
     suno_cookie.load_cookie(set_cookie)
     token = resp.json().get("jwt")
     suno_cookie.set_token(token)
-    # print(set_cookie)
-    # print(f"*** token -> {token} ***")
 
 
 def keep_alive(suno_cookie: SunoCookie):
@@ -70,8 +64,15 @@ def keep_alive(suno_cookie: SunoCookie):
 
 
 def start_keep_alive(suno_cookie: SunoCookie):
+    update_token(suno_cookie)
     t = Thread(target=keep_alive, args=(suno_cookie,))
     t.start()
 
 
-start_keep_alive(suno_auth)
+async def set_cookie(request: fastapi.Request):
+    session = request.session
+    suno_auth = SunoCookie()
+    suno_auth.set_session_id(base58.b58decode(session.get("session_id")).decode())
+    suno_auth.load_cookie(base58.b58decode(session.get("cookie")).decode())
+    start_keep_alive(suno_auth)
+    return suno_auth

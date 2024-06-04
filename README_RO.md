@@ -1,6 +1,7 @@
 [简体中文](README_ZH.md) | [日本語](README_JA.md)
 
-## Știri bune! 
+## Știri bune!
+
 Ofer API-ul Suno, nu este necesară implementarea, nu este necesară nicio subscripție la Suno. Preț mai mic, mai convenabil de utilizat API-ul Suno. Website: http://app.sunoaiapi.com
 
 ### API Neoficial
@@ -16,7 +17,7 @@ Vine cu o funcționalitate integrată de menținere a tokenului și de menținer
 
 ### Contactați-mă
 
-[https://t.me/austin2035](https://t.me/austin2035)
+[https://t.me/theliec](https://t.me/theliec)
 
 ![group](./images/WechatIMG148.jpg)
 
@@ -37,10 +38,11 @@ Instalați dependențele
 ```bash
 pip3 install -r requirements.txt
 ```
+
 Pentru această parte, consultați documentația FastAPI pe cont propriu.
 
 ```bash
-uvicorn main:app 
+uvicorn main:app
 ```
 
 #### Docker

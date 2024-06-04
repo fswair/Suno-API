@@ -16,10 +16,9 @@ It comes with a built-in token maintenance and keep-alive feature, so you don't 
 - Fully asynchronous, fast, suitable for later expansion
 - Simple code, easy to maintain, convenient for secondary development
 
-
 ### Contact me
 
-[https://t.me/austin2035](https://t.me/austin2035)
+[https://t.me/theliec](https://t.me/theliec)
 
 ![group](./images/WechatIMG148.jpg)
 
@@ -33,18 +32,18 @@ These are initially obtained from the browser, and will be automatically kept al
 
 ![cookie](./images/cover.png)
 
-
 #### Run
 
-Install dependencies 
+Install dependencies
 
 ```bash
 pip3 install -r requirements.txt
 ```
 
 For this part, refer to the FastAPI documentation on your own.
+
 ```bash
-uvicorn main:app 
+uvicorn main:app
 ```
 
 #### Docker
@@ -62,4 +61,3 @@ After setting up the service, visit /docs
 ### Useful resources
 
 [chatgpt web, midjourney, gpts,tts, whisper,suno-v3](https://github.com/Dooy/chatgpt-web-midjourney-proxy)
-
