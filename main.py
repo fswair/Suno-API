@@ -51,7 +51,7 @@ async def generate(
     request: Request,
     data: schemas.Credentials = None,
 ):
-    credentials = dict(request.session) or data.dict()
+    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -72,7 +72,7 @@ async def generate_with_song_description(
     model: schemas.DescriptionModeGenerateParam,
     request: Request, data: schemas.Credentials = None,
 ):
-    credentials = dict(request.session) or data.dict()
+    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -90,7 +90,7 @@ async def generate_with_song_description(
 
 @app.get("/feed/{aid}")
 async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict()
+    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -108,7 +108,7 @@ async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = Non
 
 @app.post("/generate/lyrics/")
 async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict()
+    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -131,7 +131,7 @@ async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Requ
 
 @app.get("/lyrics/{lid}")
 async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict()
+    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -149,7 +149,7 @@ async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = N
 
 @app.get("/get_credits")
 async def fetch_credits(request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict()
+    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
     print(credentials)
     if credentials.get("cookie") is None:
         return {"error": "Credentials not found in cookie. Please setup or pass credentials as json data."}
