@@ -148,6 +148,26 @@ async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = N
 
 
 @app.get("/get_credits")
+async def fetch_credits(request: Request):
+    credentials = request.session
+    if not credentials:
+        return {"error": "Credentials not found in cookie. Please setup or pass credentials as json data."}
+    else:
+        try:
+            auth = await set_cookie(credentials)
+        except Exception as e:
+            return HTTPException(500, f"An error occured: {e!r}")
+        token = auth.get_token()
+        suno = Suno(token)
+    try:
+        resp = await suno.get_credits()
+        return resp
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@app.post("/get_credits")
 async def fetch_credits(request: Request, data: schemas.Credentials = None):
     credentials = dict(request.session) or data.dict() if data else {}
     if not credentials:
