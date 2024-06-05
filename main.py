@@ -34,12 +34,13 @@ app.add_middleware(
 
 @app.get("/")
 async def get_root(request: Request):
-    sid = request.session.get("session_id")
+    credentials = dict(request.session)
+    sid = credentials.get("session_id")
     if sid:
         sid = sid[:12] + ("*" * 22) + sid[34:]
     return {"message": "Welcome to Suno API", "status": "alive", "user": {
-        "status": f"logged in at {request.session.get('date')}" if request.session.get("uuid") else "not logged in yet",
-        "uuid": request.session.get("uuid"),
+        "status": f"logged in at {credentials.get('date')}" if credentials.get("uuid") else "not logged in yet",
+        "uuid": credentials.get("uuid"),
         "session_id": sid
     }}
 
@@ -48,15 +49,17 @@ async def get_root(request: Request):
 async def generate(
     model: schemas.CustomModeGenerateParam,
     request: Request,
+    data: schemas.Credentials = None,
 ):
-    if request.session.get("cookie") is None:
+    credentials = dict(request.session) or data.dict()
+    if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
-        auth = await set_cookie(request)
+        auth = await set_cookie(credentials)
         token = auth.get_token()
         suno = Suno(token)
     try:
-        resp = await suno.generate_music(model.dict(), token)
+        resp = await suno.generate_music(model.dict())
         return resp
     except Exception as e:
         raise HTTPException(
@@ -67,12 +70,13 @@ async def generate(
 @app.post("/generate/description-mode")
 async def generate_with_song_description(
     model: schemas.DescriptionModeGenerateParam,
-    request: Request,
+    request: Request, data: schemas.Credentials = None,
 ):
-    if request.session.get("cookie") is None:
+    credentials = dict(request.session) or data.dict()
+    if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
-        auth = await set_cookie(request)
+        auth = await set_cookie(credentials)
         token = auth.get_token()
         suno = Suno(token)
     try:
@@ -85,11 +89,12 @@ async def generate_with_song_description(
 
 
 @app.get("/feed/{aid}")
-async def fetch_feed(aid: str, request: Request):
-    if request.session.get("cookie") is None:
+async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = None):
+    credentials = dict(request.session) or data.dict()
+    if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
-        auth = await set_cookie(request)
+        auth = await set_cookie(credentials)
         token = auth.get_token()
         suno = Suno(token)
     try:
@@ -102,11 +107,12 @@ async def fetch_feed(aid: str, request: Request):
 
 
 @app.post("/generate/lyrics/")
-async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request):
-    if request.session.get("cookie") is None:
+async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request, data: schemas.Credentials = None):
+    credentials = dict(request.session) or data.dict()
+    if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
-        auth = await set_cookie(request)
+        auth = await set_cookie(credentials)
         token = auth.get_token()
         suno = Suno(token)
     if not model.prompt.strip():
@@ -124,11 +130,12 @@ async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Requ
 
 
 @app.get("/lyrics/{lid}")
-async def fetch_lyrics(lid: str, request: Request):
-    if request.session.get("cookie") is None:
+async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = None):
+    credentials = dict(request.session) or data.dict()
+    if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
-        auth = await set_cookie(request)
+        auth = await set_cookie(credentials)
         token = auth.get_token()
         suno = Suno(token)
     try:
@@ -141,13 +148,14 @@ async def fetch_lyrics(lid: str, request: Request):
 
 
 @app.get("/get_credits")
-async def fetch_credits(request: Request):
-    if request.session.get("cookie") is None:
-        return RedirectResponse(url="/setup?redirect_to=get_credits")
+async def fetch_credits(request: Request, data: schemas.Credentials = None):
+    credentials = dict(request.session) or data.dict()
+    print(credentials)
+    if credentials.get("cookie") is None:
+        return {"error": "Credentials not found in cookie. Please setup or pass credentials as json data."}
     else:
         try:
-            auth = await set_cookie(request)
-            
+            auth = await set_cookie(credentials)
         except Exception as e:
             return HTTPException(500, f"An error occured: {e!r}")
         token = auth.get_token()
@@ -167,7 +175,8 @@ async def reset(request: Request):
 
 @app.get("/setup")
 async def setup(request: Request):
-    if request.session.get("uuid"):
+    credentials = dict(request.session)
+    if credentials.get("uuid"):
             return HTMLResponse("There is already a UUID stored in the cookie. To reset credentials, click <a href='/reset'><b>here</b></a>.")
     return HTMLResponse(
         """
@@ -184,9 +193,10 @@ async def setup(request: Request):
 
 @app.post("/setup")
 async def setup(request: Request):
-        form = dict(await request.form())
+        form = await request.form()
         uid = int(int(time.time() + id(request)))
-        if request.session.get("uuid"):
+        credentials = dict(request.session)
+        if credentials.get("uuid"):
             return HTMLResponse("There is already a UUID stored in the cookie. To reset credentials, click <a href='/reset'><b>here</b></a>.")
         if (
             form.get("cookie") is None or form.get("session_id") is None
@@ -194,6 +204,9 @@ async def setup(request: Request):
             return HTMLResponse("Cookie and Session ID are required.")
         
         cookie, session_id = form.get("cookie"), form.get("session_id")
+        
+        if not cookie or not session_id:
+            return HTMLResponse("Cookie and Session ID are required as filled.")
         
         request.session["uuid"] = uid
         request.session["cookie"] = base64.b64encode(cookie.encode()).decode()

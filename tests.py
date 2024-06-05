@@ -2,6 +2,7 @@ import json
 import os
 import time
 import requests
+import pathlib
 
 base_endpoint: str = "http://127.0.0.1:8000"
 
@@ -80,3 +81,4 @@ def save_song(aid: str, output_path: str = "output"):
             # If the chunk is not empty, write it to the file.
             if chunk:
                 output_file.write(chunk)
+    return pathlib.Path(output_path)

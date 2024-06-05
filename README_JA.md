@@ -1,53 +1,129 @@
-# 非公式 Suno API
+### 説明
 
-Python と FastAPI をベースにした非公式の Suno API です。現在、曲や歌詞などの生成に対応しています。
-トークンのメンテナンスと keep-alive 機能が組み込まれているので、トークンの期限切れを心配する必要はありません。
+このソースでは、[SunoAI-API](https://github.com/SunoAI-API/Suno-API) と [fswair](https://github.com/fswair) がサポートされています/詳細はこちら。
 
-### 特徴
+### FastAPI ドキュメントの翻訳
 
-- 自動トークンメンテナンスと keep-alive
-- 完全非同期、高速、将来の拡張に対応
-- シンプルなコード、メンテナンスが容易、二次開発に便利
+#### 一般的な翻訳
 
+FastAPI ドキュメントの翻訳、音楽の翻訳、およびオーディオの翻訳は、通常、ユーザーが自分のコンピュータで実行している操作です。 CORS は、読者が自分のブログやウェブサイトをいつでも無料で閲覧できるようにするために作成されました。
 
-### 使用方法
+## 手動認証
 
-#### 設定
+手動で認証するには、次の形式で json パラメータのペイロードにフィールドを追加する必要があります。
 
-`.env.example` ファイルを編集して `.env` にリネームし、session_id と cookie を記入する。
+「」
+json={
+"データ"： {
+"クッキー": "文字列",
+"セッション ID": "文字列"
+}、
+"モデル"：{
+「フィールド」:値
+}
+}
+「」
 
-これらは最初にブラウザから取得され、後で自動的に keep-alive されます。
+### コンテンツ
 
-![cookie](./images/cover.png)
+- [一般的な投稿](#一般的な投稿)
+- [現在の投稿設定](#現在の投稿設定)
+- [現在の投稿設定](#現在の投稿設定)
+- [音楽生成 (`/generate`)](https://suno.tomris.dev/docs#/default/generate_generate_post)
+- [音楽生成モード (`/generate/description-) の使用] mode`)](https://suno.tomris.dev/docs#/default/generate_with_song_description_generate_description_mode_post)
+- [Feed by AID (`/feed/{aid}`)](https://suno.tomris.dev/docs#/default/fetch_feed_feed__aid__get)
+- [Create Lyrics (`/generate/lyrics`)](https://suno. tomris.dev/docs#/default/generate_lyrics_post_generate_lyrics\_\_post)
+- [`/lyrics/{lid}` をアップロード](https://suno.tomris.dev/docs#/default/fetch_lyrics_lyrics__lid__get)
+- [クレジット カード(`/get_credits`)](https://suno.tomris.dev/docs#/default/fetch_credits_get_credits_get)
+- [クレジットを投稿する(`/reset`)](https://suno.tomris.dev/docs#/default/reset_reset_get)
+- [Setup Creds (GET) (`/setup`)](https://suno.tomris.dev /docs#/default/setup_setup_get)
+- [POST ドキュメント (`/setup`)](https://suno.tomris.dev/docs#/default/setup_setup_post)
 
+### 次ページ 設定
 
-#### 実行
+```python
+app.add_middleware(
+SessionMiddleware、
+secret_key=SECRET_KEY、
+same_site="none",
+max_age=86400 * 30、
+https_only=True、
+session_cookie="session"
+)
 
-依存関係をインストールする
-
-```bash
-pip3 install -r requirements.txt
+app.add_middleware(
+CORSMiddleware、
+allow_origins=["*"],
+allow_credentials=True,
+allow_methods=["*"],
+allow_headers=["*"],
+)
 ```
 
-この部分については、各自で FastAPI ドキュメントを参照してください。
-```bash
-uvicorn main:app
+この構成では、`SessionMiddleware` と CORS ミドルウェアの両方がサポートされています。また、`CORSMiddleware` もサポートされています。 .
+
+### 無効にする
+
+#### ホーム (`/`)
+
+- **実行:** `GET`
+- **実行:** メッセージを再度送信して、しばらくお待ちください。
+- ** パラメーター:** 有効
+- ** 有効:**
+
+```json
+{
+"message": "Suno API へようこそ",
+"status": "alive",
+"user": {
+"status": " {date} にログインしました" または "まだログインしていません",
+"uuid": "{uuid}",
+"session_id": "{session_id}"
+}
+}
 ```
 
-#### Docker
+#### 音楽生成 (`/generate` )
 
-```bash
-docker compose build && docker compose up
+- **タグ:** `POST`
+- **タグ:** 音楽再生用のパラメーター付きモデル。
+- **出力:**
+
+```json
+{
+  "model": {
+    // schemas.CustomModeGenerateParam はモデル パラメーターです
+  }
+}
 ```
 
-#### ドキュメント
+- **出力:** 出力には、このメッセージが含まれている必要があります。
 
-サービスをセットアップしたら、/docs にアクセスしてください
+#### 音楽出力モード (`/generate/description-mode`)
 
-![docs](./images/docs.png)
+- **生成:** `POST`
+- **出力:** 音楽出力モードを無効にします。
+- **出力:**
 
+```json
+{
+  "model": {
+    // schemas.DescriptionModeGenerateParam はモデル パラメーターです
+  }
+}
+```
 
-#### 連絡する
+- **出力:** 出力には、このメッセージが含まれている必要があります。
 
+#### 承認済み (`/feed/{aid}`)
 
-<img src="./images/wechat.jpg" width="382px" height="511px" />
+- **承認済み:** `GET`
+- **承認済み:** 承認済みの `aid` をアップロードしてください。
+- ** パスパラメータ:**
+- `aid` (パスパラメータ): `aid` を指定します。
+- **コメント:** 必ずこのメッセージを送ってください。
+
+#### 歌詞を生成する (`/generate/lyrics`)
+
+- **管理者:** `POST`
+- **アクション:** 歌詞を生成するプロンプトが表示されます。

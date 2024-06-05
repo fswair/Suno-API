@@ -1,62 +1,129 @@
-[简体中文](README_ZH.md) | [日本語](README_JA.md)
+### Despre
 
-## Știri bune!
+Acest depozit este preluat de la [SunoAI-API](https://github.com/SunoAI-API/Suno-API) și dezvoltat/implementat de [fswair](https://github.com/fswair).
 
-Ofer API-ul Suno, nu este necesară implementarea, nu este necesară nicio subscripție la Suno. Preț mai mic, mai convenabil de utilizat API-ul Suno. Website: http://app.sunoaiapi.com
+### Documentația de implementare FastAPI
 
-### API Neoficial
+#### Prezentare generală
 
-Acesta este un API Suno neoficial bazat pe Python și FastAPI. În prezent, suportă generarea de cântece, versuri, etc.
-Vine cu o funcționalitate integrată de menținere a tokenului și de menținere a conexiunii, astfel încât să nu trebuie să vă faceți griji în legătură cu expirarea tokenului.
+Această implementare FastAPI oferă diverse puncte finale, cum ar fi crearea de muzică, primirea de feeduri și gestionarea sesiunilor utilizatorilor. Gestionează în siguranță cererile de origine încrucișată și sesiunile utilizatorilor folosind CORS și middleware de sesiune.
 
-### Caracteristici
+## Autentificare manuală
 
-- Menținerea automată a tokenului și a conexiunii
-- Complet asincron, rapid, potrivit pentru o extindere ulterioară
-- Cod simplu, ușor de întreținut, convenabil pentru dezvoltarea secundară
+Pentru a vă autentifica manual, trebuie să adăugați un câmp în sarcina utilă în parametrul json cu următorul format:
 
-### Contactați-mă
-
-[https://t.me/theliec](https://t.me/theliec)
-
-![group](./images/WechatIMG148.jpg)
-
-### Utilizare
-
-#### Configurare
-
-Editați fișierul `.env.example`, redenumiți-l în `.env` și completați cu session_id și cookie.
-
-Acestea sunt obținute inițial din browser și vor fi menținute automat în viitor.
-
-![cookie](./images/cover.png)
-
-#### Rulare
-
-Instalați dependențele
-
-```bash
-pip3 install -r requirements.txt
+```
+json={
+ "date": {
+ "cookie": "șir",
+ "session_id": "șir"
+ },
+ "model":{
+ „câmp”:valoare
+ }
+}
 ```
 
-Pentru această parte, consultați documentația FastAPI pe cont propriu.
+### Cuprins
 
-```bash
-uvicorn main:app
+- [Prezentare generală](#overview)
+- [Configurare middleware](#middleware-configuration)
+- [Endpoints](#endpoints)
+- [Generează muzică (`/generate`)](https://suno.tomris.dev/docs#/default/generate_generate_post)
+- [Generează muzică cu modul de descriere (`/generate/description-mode`)](https://suno.tomris.dev/docs#/default/generate_with_song_description_generate_description_mode_post)
+- [Obțineți Feed (`/feed/{aid}`)](https://suno.tomris.dev/docs#/default/fetch_feed_feed__aid__get)
+- [Generează versuri (`/generate/lyrics`)](https://suno.tomris.dev/docs#/default/generate_lyrics_post_generate_lyrics__post)
+- [Obține versuri (`/lyrics/{lid}`)](https://suno.tomris.dev/docs#/default/fetch_lyrics_lyrics__lid__get)
+- [Obține informații despre credit (`/get_credits`)](https://suno.tomris.dev/docs#/default/fetch_credits_get_credits_get)
+- [Resetați acreditările (`/reset`)](https://suno.tomris.dev/docs#/default/reset_reset_get)
+- [Setare acreditări (GET) (`/setup`)](https://suno.tomris.dev/docs#/default/setup_setup_get)
+- [Setare acreditări (POST) (`/setup`)](https://suno.tomris.dev/docs#/default/setup_setup_post)
+
+### Configurare middleware
+
+```python
+app.add_middleware(
+ SessionMiddleware,
+ secret_key=SECRET_KEY,
+ same_site="niciunul",
+ varsta_max=86400 * 30,
+ https_only=Adevărat,
+ session_cookie="sesiune"
+)
+
+app.add_middleware(
+ CORSMiddleware,
+ allow_origins="*"],
+ allow_credentials=Adevărat,
+ allow_methods="*"],
+ allow_headers="*"],
+)
 ```
 
-#### Docker
+Această configurație include `SessionMiddleware` pentru gestionarea sesiunilor și `CORSMiddleware` pentru gestionarea setărilor CORS.
 
-```bash
-docker compose build && docker compose up
+### Puncte extreme
+
+#### Pagina de pornire (`/`)
+
+- **Metodă:** `GET`
+- **Descriere:** Mesajul de bun venit și starea sesiunii sunt returnate.
+- **Parametri de solicitare:** Nici unul
+- **Răspuns:**
+
+```json
+{
+"message": "Bine ați venit la Suno API",
+"status": "în viață",
+"utilizator": {
+„status”: „conectat la {date}” sau „nu v-ați conectat încă”,
+"uuid": "{uuid}",
+"session_id": "{session_id}"
+}
+}
 ```
 
-#### Documentație
+#### Generare muzică (`/generate`)
 
-După configurarea serviciului, vizitați /docs
+- **Metodă:** `POST`
+- **Descriere:** creează muzică pe baza parametrilor de model dat.
+- **Organismul cererii:**
 
-![docs](./images/docs.png)
+```json
+{
+  "model": {
+    //parametrii modelului conform schemelor.CustomModeGenerateParam
+  }
+}
+```
 
-### Resurse folositoare
+- **Răspuns:** Returnează muzica creată sau mesajul de eroare.
 
-[chatgpt web, midjourney, gpts,tts, whisper,suno-v3](https://github.com/Dooy/chatgpt-web-midjourney-proxy)
+#### Generați muzică cu modul de descriere (`/generate/description-mode`)
+
+- **Metodă:** `POST`
+- **Descriere:** creează muzică pe baza descrierii melodiei.
+- **Organismul cererii:**
+
+```json
+{
+  "model": {
+    //parametrii modelului conform schemelor.DescriptionModeGenerateParam
+  }
+}
+```
+
+- **Răspuns:** Returnează muzica creată sau mesajul de eroare.
+
+#### Obțineți feed (`/feed/{aid}`)
+
+- **Metodă:** `GET`
+- **Descriere:** Preia feedul pentru un anumit „ajutor”.
+- **Parametri de solicitare:**
+- `aid` (parametru cale): `aid` al fluxului de primit.
+- **Răspuns:** returnează datele din feed sau mesajul de eroare.
+
+#### Generați versuri (`/generate/lyrics`)
+
+- **Metodă:** `POST`
+- **Descriere:** creează versuri conform solicitării date.

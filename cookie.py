@@ -2,7 +2,6 @@
 
 import base64
 import time
-import fastapi
 from http.cookies import SimpleCookie
 from threading import Thread
 
@@ -69,10 +68,13 @@ def start_keep_alive(suno_cookie: SunoCookie):
     t.start()
 
 
-async def set_cookie(request: fastapi.Request):
-    session = request.session
+async def set_cookie(credentials: dict):
     suno_auth = SunoCookie()
-    suno_auth.set_session_id(base64.b64decode(session.get("session_id")).decode())
-    suno_auth.load_cookie(base64.b64decode(session.get("cookie")).decode())
+    try:
+        suno_auth.set_session_id(base64.b64decode(credentials.get("session_id")).decode())
+        suno_auth.load_cookie(base64.b64decode(credentials.get("cookie")).decode())
+    except:
+        suno_auth.set_session_id(credentials.get("session_id"))
+        suno_auth.load_cookie(credentials.get("cookie"))
     start_keep_alive(suno_auth)
     return suno_auth

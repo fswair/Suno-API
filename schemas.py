@@ -46,3 +46,9 @@ class LyricsGenerateParam(BaseModel):
     """Generate Lyrics"""
 
     prompt: str = Field(..., description="lyrics")
+
+class Credentials(BaseModel):
+    """Credentials"""
+
+    cookie: Optional[str] = Field(default=None, description="cookie")
+    session_id: Optional[str] = Field(default=None, description="session_id")
