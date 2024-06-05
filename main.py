@@ -150,8 +150,7 @@ async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = N
 @app.get("/get_credits")
 async def fetch_credits(request: Request, data: schemas.Credentials = None):
     credentials = dict(request.session) or data.dict() if data else {}
-    print(credentials)
-    if credentials.get("cookie") is None:
+    if not credentials:
         return {"error": "Credentials not found in cookie. Please setup or pass credentials as json data."}
     else:
         try:
