@@ -94,7 +94,7 @@ async def generate(
 @app.get("/generate/description-mode")
 async def generate_with_song_description(
     request: Request,
-    gpt_description_prompt: str
+    gpt_description_prompt: str,
     make_instrumental: bool = False,
     mv: str = "chirp-v3-0",
     prompt: str = ""
