@@ -1,125 +1,145 @@
-### Hakkında
+İşte JSON yükünde manuel kimlik doğrulaması hakkında ek bilgi içeren Türkçe README:
 
-Bu depo, [SunoAI-API](https://github.com/SunoAI-API/Suno-API)'dan çatallanmıştır ve [fswair](https://github.com/fswair) tarafından geliştirilmiş/konuşlanmıştır.
+````markdown
+# Suno API
 
-### FastAPI Uygulama Dokümantasyonu
-
-#### Genel Bakış
-
-Bu FastAPI uygulaması, müzik oluşturma, beslemeleri alma ve kullanıcı oturumlarını yönetme gibi çeşitli uç noktalar sağlar. CORS ve oturum ara yazılımı kullanarak çapraz kaynak taleplerini ve kullanıcı oturumlarını güvenli bir şekilde yönetir.
-
-### İçindekiler
-
-- [Genel Bakış](#genel-bakış)
-- [Ara Yazılım Konfigürasyonu](#ara-yazılım-konfigürasyonu)
-- [Uç Noktalar](#uç-noktalar)
-  - [Ana Sayfa (`/`)](#ana-sayfa-)
-  - [Müzik Oluştur (`/generate`)](https://suno.tomris.dev/docs#/default/generate_generate_post)
-  - [Açıklama Modu ile Müzik Oluştur (`/generate/description-mode`)](https://suno.tomris.dev/docs#/default/generate_with_song_description_generate_description_mode_post)
-  - [Besleme Al (`/feed/{aid}`)](https://suno.tomris.dev/docs#/default/fetch_feed_feed__aid__get)
-  - [Şarkı Sözü Oluştur (`/generate/lyrics`)](https://suno.tomris.dev/docs#/default/generate_lyrics_post_generate_lyrics__post)
-  - [Şarkı Sözlerini Getir (`/lyrics/{lid}`)](https://suno.tomris.dev/docs#/default/fetch_lyrics_lyrics__lid__get)
-  - [Kredi Bilgilerini Al (`/get_credits`)](https://suno.tomris.dev/docs#/default/fetch_credits_get_credits_get)
-  - [Kimlik Bilgilerini Sıfırla (`/reset`)](https://suno.tomris.dev/docs#/default/reset_reset_get)
-  - [Kimlik Bilgilerini Ayarla (GET) (`/setup`)](https://suno.tomris.dev/docs#/default/setup_setup_get)
-  - [Kimlik Bilgilerini Ayarla (POST) (`/setup`)](https://suno.tomris.dev/docs#/default/setup_setup_post)
-
-### Ara Yazılım Konfigürasyonu
-
-```python
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=SECRET_KEY,
-    same_site="none",
-    max_age=86400 * 30,
-    https_only=True,
-    session_cookie="session"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-Bu konfigürasyon, oturumları yönetmek için `SessionMiddleware` ve CORS ayarlarını yönetmek için `CORSMiddleware` içerir.
-
-### Uç Noktalar
+Bu, FastAPI ile oluşturulmuş Suno API'sidir. API, müzik oluşturma, besleme alma, şarkı sözleri oluşturma ve kullanıcı kimlik bilgilerini oturumlar (çerezler) veya doğrudan yük aracılığıyla işleme sonlanımlarını içerir.
 
 ## Manuel Kimlik Doğrulama
 
-Manuel olarak kimlik doğrulamak için json parametresindeki payloadda aşağıdaki biçimde bir field eklemelisiniz:
+JSON yükünü kullanarak manuel kimlik doğrulaması yapmak için aşağıdaki alanları ekleyin:
 
-```
-json={
+```json
+{
   "data": {
     "cookie": "string",
     "session_id": "string"
   },
   "model": {
-    "field": value
+    "field": "value"
   }
 }
 ```
+````
 
-#### Ana Sayfa (`/`)
+## Gereksinimler
 
-- **Yöntem:** `GET`
-- **Açıklama:** Hoş geldiniz mesajı ve oturum durumu döner.
-- **İstek Parametreleri:** Yok
-- **Yanıt:**
-  ```json
-  {
-    "message": "Welcome to Suno API",
-    "status": "alive",
-    "user": {
-      "status": "logged in at {date}" or "not logged in yet",
-      "uuid": "{uuid}",
-      "session_id": "{session_id}"
-    }
-  }
-  ```
+- Python 3.8+
+- FastAPI
+- Uvicorn
+- `requirements.txt` dosyasında listelenen diğer bağımlılıklar
 
-#### Müzik Oluştur (`/generate`)
+## Kurulum
 
-- **Yöntem:** `POST`
-- **Açıklama:** Verilen model parametrelerine göre müzik oluşturur.
-- **İstek Gövdesi:**
-  ```json
-  {
-    "model": {
-      // schemas.CustomModeGenerateParam'a göre model parametreleri
-    }
-  }
-  ```
-- **Yanıt:** Oluşturulan müziği veya hata mesajını döner.
+1. Depoyu klonlayın:
 
-#### Açıklama Modu ile Müzik Oluştur (`/generate/description-mode`)
+   ```sh
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
 
-- **Yöntem:** `POST`
-- **Açıklama:** Şarkı açıklamasına göre müzik oluşturur.
-- **İstek Gövdesi:**
-  ```json
-  {
-    "model": {
-      // schemas.DescriptionModeGenerateParam'a göre model parametreleri
-    }
-  }
-  ```
-- **Yanıt:** Oluşturulan müziği veya hata mesajını döner.
+2. Bir sanal ortam oluşturun ve etkinleştirin:
 
-#### Besleme Al (`/feed/{aid}`)
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # Windows'ta `venv\Scripts\activate` kullanın
+   ```
 
-- **Yöntem:** `GET`
-- **Açıklama:** Belirli bir `aid` için beslemeyi alır.
-- **İstek Parametreleri:**
-  - `aid` (path parametresi): Alınacak beslemenin `aid`'i.
-- **Yanıt:** Besleme verilerini veya hata mesajını döner.
+3. Bağımlılıkları yükleyin:
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-#### Şarkı Sözü Oluştur (`/generate/lyrics`)
+## Uygulamayı Çalıştırma
 
-- **Yöntem:** `POST`
-- **Açıklama:** Verilen prompt'a göre şarkı sözleri oluşturur.
+FastAPI uygulamasını Uvicorn ile çalıştırın:
+
+```sh
+uvicorn main:app --reload
+```
+
+Uygulama `http://127.0.0.1:8000` adresinde erişilebilir olacaktır.
+
+## Endpoints
+
+### Ana Endpoint
+
+- **GET `/`**
+  - Hoş geldiniz mesajı ve mevcut kullanıcı durumu döner.
+
+### Müzik Oluştur
+
+- **GET `/generate`**
+  - Parametreler: `model: schemas.CustomModeGenerateParam`
+  - Oturum kimlik bilgileri gerektirir.
+- **POST `/generate`**
+  - Parametreler: `model: schemas.CustomModeGenerateParam`, `data: schemas.Credentials`
+  - Yükte kimlik bilgilerini kabul eder.
+
+### Açıklama ile Müzik Oluştur
+
+- **GET `/generate/description-mode`**
+  - Parametreler: `model: schemas.DescriptionModeGenerateParam`
+  - Oturum kimlik bilgileri gerektirir.
+- **POST `/generate/description-mode`**
+  - Parametreler: `model: schemas.DescriptionModeGenerateParam`, `data: schemas.Credentials`
+  - Yükte kimlik bilgilerini kabul eder.
+
+### Besleme Al
+
+- **GET `/feed/{aid}`**
+  - Yol Parametresi: `aid` (string)
+  - Oturum kimlik bilgileri gerektirir.
+- **POST `/feed/{aid}`**
+  - Yol Parametresi: `aid` (string)
+  - Yükte kimlik bilgilerini kabul eder.
+
+### Şarkı Sözleri Oluştur
+
+- **GET `/generate/lyrics/`**
+  - Parametreler: `model: schemas.LyricsGenerateParam`
+  - Oturum kimlik bilgileri gerektirir.
+- **POST `/generate/lyrics/`**
+  - Parametreler: `model: schemas.LyricsGenerateParam`, `data: schemas.Credentials`
+  - Yükte kimlik bilgilerini kabul eder.
+
+### Şarkı Sözlerini Al
+
+- **GET `/lyrics/{lid}`**
+  - Yol Parametresi: `lid` (string)
+  - Oturum kimlik bilgileri gerektirir.
+- **POST `/lyrics/{lid}`**
+  - Yol Parametresi: `lid` (string)
+  - Yükte kimlik bilgilerini kabul eder.
+
+### Kredileri Al
+
+- **GET `/get_credits`**
+  - Oturum kimlik bilgileri gerektirir.
+- **POST `/get_credits`**
+  - Yükte kimlik bilgilerini kabul eder.
+
+### Kimlik Bilgilerini Sıfırla
+
+- **GET `/reset`**
+  - Oturumda depolanan kimlik bilgilerini temizler.
+
+### Kimlik Bilgilerini Ayarla
+
+- **GET `/setup`**
+  - Çerez ve oturum kimliğini girmek için bir form görüntüler.
+- **POST `/setup`**
+  - Sağlanan kimlik bilgilerini oturumda depolar.
+
+## Kullanım
+
+API'yi kullanmak için önce `/setup` yoluna giderek gerekli alanları doldurarak kimlik bilgilerini ayarlayın. Alternatif olarak, POST isteklerini destekleyen son noktalar için kimlik bilgileri doğrudan yükte geçilebilir.
+
+## Lisans
+
+Bu proje MIT Lisansı ile lisanslanmıştır.
+
+```
+
+Projeye özgü detayları eklemek isterseniz bu README'yi daha fazla özelleştirebilirsiniz.
+```
