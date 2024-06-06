@@ -44,14 +44,12 @@ async def get_root(request: Request):
         "session_id": sid
     }}
 
-
-@app.post("/generate")
+@app.get("/generate")
 async def generate(
     model: schemas.CustomModeGenerateParam,
-    request: Request,
-    data: schemas.Credentials = None,
+    request: Request
 ):
-    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
+    credentials = dict(request.session)
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -66,15 +64,55 @@ async def generate(
             detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@app.post("/generate")
+async def generate(
+    model: schemas.CustomModeGenerateParam,
+    request: Request,
+    data: schemas.Credentials = None,
+):
+    credentials = data.dict() if data and isinstance(data, schemas.Credentials) else {}
+    if credentials.get("cookie") is None:
+        return {"error": "No credentials found in payload."}
+    else:
+        auth = await set_cookie(credentials)
+        token = auth.get_token()
+        suno = Suno(token)
+    try:
+        resp = await suno.generate_music(model.dict())
+        return resp
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@app.get("/generate/description-mode")
+async def generate_with_song_description(
+    model: schemas.DescriptionModeGenerateParam,
+    request: Request
+):
+    credentials = dict(request.session)
+    if credentials.get("cookie") is None:
+        return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
+    else:
+        auth = await set_cookie(credentials)
+        token = auth.get_token()
+        suno = Suno(token)
+    try:
+        resp = await suno.generate_music(model.dict())
+        return resp
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @app.post("/generate/description-mode")
 async def generate_with_song_description(
     model: schemas.DescriptionModeGenerateParam,
     request: Request, data: schemas.Credentials = None,
 ):
-    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
+    credentials = data.dict() if data and isinstance(data, schemas.Credentials) else {}
     if credentials.get("cookie") is None:
-        return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
+        return {"error": "No credentials found in payload."}
     else:
         auth = await set_cookie(credentials)
         token = auth.get_token()
@@ -89,8 +127,8 @@ async def generate_with_song_description(
 
 
 @app.get("/feed/{aid}")
-async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
+async def fetch_feed(aid: str, request: Request):
+    credentials = dict(request.session)
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -105,10 +143,26 @@ async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = Non
             detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@app.post("/feed/{aid}")
+async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = None):
+    credentials = data.dict() if data and isinstance(data, schemas.Credentials) else {}
+    if credentials.get("cookie") is None:
+        return {"error": "No credentials found in payload."}
+    else:
+        auth = await set_cookie(credentials)
+        token = auth.get_token()
+        suno = Suno(token)
+    try:
+        resp = await suno.get_feed(aid, token)
+        return resp
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
-@app.post("/generate/lyrics/")
-async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
+@app.get("/generate/lyrics/")
+async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request):
+    credentials = dict(request.session)
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
     else:
@@ -128,12 +182,50 @@ async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Requ
             detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
+@app.post("/generate/lyrics/")
+async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request, data: schemas.Credentials = None):
+    credentials = data.dict() if data and isinstance(data, schemas.Credentials) else {}
+    if credentials.get("cookie") is None:
+        return {"error": "No credentials found in payload."}
+    else:
+        auth = await set_cookie(credentials)
+        token = auth.get_token()
+        suno = Suno(token)
+    if not model.prompt.strip():
+        return HTTPException(
+            detail="Prompt can't be empty!", status_code=status.HTTP_400_BAD_REQUEST
+        )
+    try:
+        resp = await suno.generate_lyrics(model.prompt)
+        resp.update({"lyrics": f"{request.base_url}lyrics/{resp['id']}"})
+        return resp
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @app.get("/lyrics/{lid}")
-async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = None):
-    credentials = dict(request.session) or data.dict() if data and isinstance(data, schemas.Credentials) else {}
+async def fetch_lyrics(lid: str, request: Request):
+    credentials = dict(request.session)
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
+    else:
+        auth = await set_cookie(credentials)
+        token = auth.get_token()
+        suno = Suno(token)
+    try:
+        resp = await suno.get_lyrics(lid)
+        return resp
+    except Exception as e:
+        raise HTTPException(
+            detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@app.post("/lyrics/{lid}")
+async def fetch_lyrics(lid: str, request: Request, data: schemas.Credentials = None):
+    credentials = data.dict() if data and isinstance(data, schemas.Credentials) else {}
+    if credentials.get("cookie") is None:
+        return {"error": "No credentials found in payload."}
     else:
         auth = await set_cookie(credentials)
         token = auth.get_token()
