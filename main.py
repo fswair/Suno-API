@@ -5,7 +5,7 @@ import base64, time, datetime
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 
 import schemas
 from cookie import set_cookie
@@ -43,6 +43,11 @@ async def get_root(request: Request):
         "uuid": credentials.get("uuid"),
         "session_id": sid
     }}
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("favicon.ico")
 
 @app.get("/generate")
 async def generate(
