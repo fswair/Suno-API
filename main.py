@@ -46,8 +46,13 @@ async def get_root(request: Request):
 
 @app.get("/generate")
 async def generate(
-    model: schemas.CustomModeGenerateParam,
-    request: Request
+    request: Request,
+    prompt: str,
+    mv: str,
+    title: str,
+    tags: str,
+    continue_at: int = None,
+    continue_clip_id: str = None
 ):
     credentials = dict(request.session)
     if credentials.get("cookie") is None:
@@ -57,12 +62,13 @@ async def generate(
         token = auth.get_token()
         suno = Suno(token)
     try:
-        resp = await suno.generate_music(model.dict())
+        resp = await suno.generate_music(dict(prompt=prompt, mv=mv, title=title, tags=tags, continue_at=continue_at, continue_clip_id=continue_clip_id))
         return resp
     except Exception as e:
         raise HTTPException(
             detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+        
 
 @app.post("/generate")
 async def generate(
@@ -87,8 +93,11 @@ async def generate(
 
 @app.get("/generate/description-mode")
 async def generate_with_song_description(
-    model: schemas.DescriptionModeGenerateParam,
-    request: Request
+    request: Request,
+    gpt_description_prompt: str
+    make_instrumental: bool = False,
+    mv: str = "chirp-v3-0",
+    prompt: str = ""
 ):
     credentials = dict(request.session)
     if credentials.get("cookie") is None:
@@ -98,7 +107,7 @@ async def generate_with_song_description(
         token = auth.get_token()
         suno = Suno(token)
     try:
-        resp = await suno.generate_music(model.dict())
+        resp = await suno.generate_music(dict(gpt_description_prompt=gpt_description_prompt, make_instrumental=make_instrumental, mv=mv, prompt=prompt))
         return resp
     except Exception as e:
         raise HTTPException(
@@ -136,7 +145,7 @@ async def fetch_feed(aid: str, request: Request):
         token = auth.get_token()
         suno = Suno(token)
     try:
-        resp = await suno.get_feed(aid, token)
+        resp = await suno.get_feed(aid)
         return resp
     except Exception as e:
         raise HTTPException(
@@ -153,7 +162,7 @@ async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = Non
         token = auth.get_token()
         suno = Suno(token)
     try:
-        resp = await suno.get_feed(aid, token)
+        resp = await suno.get_feed(aid)
         return resp
     except Exception as e:
         raise HTTPException(
@@ -161,7 +170,7 @@ async def fetch_feed(aid: str, request: Request, data: schemas.Credentials = Non
         )
 
 @app.get("/generate/lyrics/")
-async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Request):
+async def generate_lyrics_post(prompt: str, request: Request):
     credentials = dict(request.session)
     if credentials.get("cookie") is None:
         return RedirectResponse(url="/setup", headers={"error": "Credentials not found in cookie. Please setup credentials."})
@@ -169,12 +178,12 @@ async def generate_lyrics_post(model: schemas.LyricsGenerateParam, request: Requ
         auth = await set_cookie(credentials)
         token = auth.get_token()
         suno = Suno(token)
-    if not model.prompt.strip():
+    if not prompt.strip():
         return HTTPException(
             detail="Prompt can't be empty!", status_code=status.HTTP_400_BAD_REQUEST
         )
     try:
-        resp = await suno.generate_lyrics(model.prompt)
+        resp = await suno.generate_lyrics(prompt)
         resp.update({"lyrics": f"{request.base_url}lyrics/{resp['id']}"})
         return resp
     except Exception as e:
